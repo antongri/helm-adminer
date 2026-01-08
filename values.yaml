@@ -1,88 +1,137 @@
 # Default values for adminer.
 # This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
   repository: adminer
-  tag: 4.8.1-standalone
+  # Supported tags: latest, standalone, fastcgi
+  # See https://hub.docker.com/_/adminer for all available tags
+  tag: 5.4.1-standalone
   pullPolicy: IfNotPresent
   pullSecrets: []
 
-# See envs from https://hub.docker.com/_/adminer/
+# Adminer configuration
+# See https://hub.docker.com/_/adminer/ for all environment variables
 config:
+  # Comma-separated list of plugins to enable
+  # Available plugins: https://github.com/vrana/adminer/tree/master/plugins
   plugins: ""
-  design: "pepa-linha"
+  # Design theme to use
+  # Available designs: https://github.com/vrana/adminer/tree/master/designs
+  design: ""
+  # Default server to connect to (legacy, prefer database.server)
   externalserver: ""
+
+# Database connection defaults
+database:
+  # Default database server hostname
+  server: ""
+  # Default database driver
+  # Options: server (MySQL), pgsql (PostgreSQL), sqlite, sqlite2, oracle, mssql, mongo, elastic
+  driver: ""
+
+# Additional environment variables
+extraEnv: []
+
+# Environment variables from secrets or configmaps
+extraEnvFrom: []
 
 nameOverride: ""
 fullnameOverride: ""
 
+# Service configuration
 service:
-  type: NodePort
+  type: ClusterIP
   port: 80
   annotations: {}
-  # To set a nodePort. Otherwise kubernetes will use a random nodePort.
-  # nodePort:
-  ## Set the LoadBalancer service type to internal only.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-  ##
-  # loadBalancerIP:
+  labels: {}
 
-  ## Load Balancer sources
-  ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-  ##
-  # loadBalancerSourceRanges:
-  # - 10.10.10.0/24
-
-## Configure Ingress based on the documentation here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-##
+# Ingress configuration (for non-Istio environments)
 ingress:
-  # className: nginx
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+# Istio VirtualService configuration
+virtualService:
   enabled: false
   annotations: {}
-  tls: []
-  hosts: []
+  # Gateway references (format: namespace/gateway-name)
+  gateways:
+    - istio-system/internal
+  # Hostnames for routing
+  hosts:
+    - adminer.example.com
+  # URI path prefix
   path: /
+  # Request timeout (e.g., "30s")
+  timeout: ""
+  # Retry configuration
+  retries: {}
+  # CORS policy
+  corsPolicy: {}
 
-# kubectl create secret generic ca --from-file=ca.pem
-# cat > login-ssl.php << EOF
-# <?php
-# require_once('plugins/login-ssl.php');
-# return new AdminerLoginSsl(array("ca" => "/secrets/ca.pem"));
-# EOF
-# kubectl create configmap plugins-enabled --from-file=login-ssl.php
-# volumeMounts:
-#   - name: ca
-#     mountPath: "/secrets/"
-#     readOnly: true
-#   - name: plugins-enabled
-#     mountPath: "/var/www/html/plugins-enabled/"
-#     readOnly: true
+# Resource limits and requests
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
 
-# volumes:
-#   - name: ca
-#     secret:
-#       secretName: ca
-#   - name: plugins-enabled
-#     configMap:
-#       name: plugins-enabled
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
+# Node selector
 nodeSelector: {}
 
+# Tolerations
 tolerations: []
 
+# Affinity rules
 affinity: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod labels
+podLabels: {}
+
+# Service account configuration
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+# Pod security context
+podSecurityContext: {}
+
+# Container security context
+securityContext: {}
+
+# Liveness probe
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Readiness probe
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Additional volume mounts
+volumeMounts: []
+
+# Additional volumes
+volumes: []

@@ -3,14 +3,14 @@ kind: Service
 metadata:
   name: {{ include "adminer.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "adminer.name" . }}
-    helm.sh/chart: {{ include "adminer.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- if .Values.service.annotations }}
+    {{- include "adminer.labels" . | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.service.annotations }}
   annotations:
-{{ toYaml .Values.service.annotations | indent 4 }}
-{{- end }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
   {{- if and .Values.service.loadBalancerIP (eq .Values.service.type "LoadBalancer") }}
@@ -18,9 +18,7 @@ spec:
   {{- end }}
   {{- if and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
-  {{ with .Values.service.loadBalancerSourceRanges }}
-{{ toYaml . | indent 4 }}
-{{- end }}
+    {{- toYaml .Values.service.loadBalancerSourceRanges | nindent 4 }}
   {{- end }}
   ports:
     - port: {{ .Values.service.port }}
@@ -31,5 +29,4 @@ spec:
       nodePort: {{ .Values.service.nodePort }}
       {{- end }}
   selector:
-    app.kubernetes.io/name: {{ include "adminer.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "adminer.selectorLabels" . | nindent 4 }}

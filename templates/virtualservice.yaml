@@ -1,0 +1,41 @@
+{{- if .Values.virtualService.enabled }}
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ include "adminer.fullname" . }}
+  labels:
+    {{- include "adminer.labels" . | nindent 4 }}
+  {{- with .Values.virtualService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gateways:
+    {{- range .Values.virtualService.gateways }}
+    - {{ . }}
+    {{- end }}
+  hosts:
+    {{- range .Values.virtualService.hosts }}
+    - {{ . | quote }}
+    {{- end }}
+  http:
+    - match:
+        - uri:
+            prefix: {{ .Values.virtualService.path | default "/" }}
+      {{- if .Values.virtualService.timeout }}
+      timeout: {{ .Values.virtualService.timeout }}
+      {{- end }}
+      {{- if .Values.virtualService.retries }}
+      retries:
+        {{- toYaml .Values.virtualService.retries | nindent 8 }}
+      {{- end }}
+      {{- if .Values.virtualService.corsPolicy }}
+      corsPolicy:
+        {{- toYaml .Values.virtualService.corsPolicy | nindent 8 }}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ include "adminer.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.service.port }}
+{{- end }}

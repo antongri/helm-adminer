@@ -1,53 +1,50 @@
----
-{{ if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled -}}
 {{- $fullName := include "adminer.fullname" . -}}
-{{- $ingressPath := tpl .Values.ingress.path . -}}
+{{- $svcPort := .Values.service.port -}}
 apiVersion: {{ include "adminer.ingress.apiVersion" . }}
 kind: Ingress
 metadata:
-  name: {{ template "adminer.fullname" . }}-ingress
-  namespace: {{ .Release.Namespace }}
+  name: {{ $fullName }}
   labels:
-    app: {{ include "adminer.name" . | quote }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
-{{- with .Values.ingress.annotations }}
+    {{- include "adminer.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
-spec:
-{{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
-{{- end }}
-{{- if .Values.ingress.tls }}
-  tls:
-  {{- range .Values.ingress.tls }}
-    - hosts:
-      {{- range .hosts }}
-        - {{ . | quote }}
-      {{- end }}
-      secretName: {{ .secretName }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
-{{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
   rules:
-  {{- range .Values.ingress.hosts }}
-    - host: {{ . }}
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
       http:
         paths:
-          - path: {{ $ingressPath }}
-            {{- if eq (include "adminer.ingress.apiVersion" $) "networking.k8s.io/v1" }}
-            pathType: ImplementationSpecific
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+            pathType: {{ .pathType | default "Prefix" }}
             {{- end }}
             backend:
-              {{- if eq (include "adminer.ingress.apiVersion" $) "networking.k8s.io/v1" }}
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
                 name: {{ $fullName }}
                 port:
-                  name: http
+                  number: {{ $svcPort }}
               {{- else }}
               serviceName: {{ $fullName }}
-              servicePort: http
+              servicePort: {{ $svcPort }}
               {{- end }}
-  {{- end }}
+          {{- end }}
+    {{- end }}
 {{- end }}
