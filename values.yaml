@@ -14,28 +14,62 @@ image:
 # Adminer configuration
 # See https://hub.docker.com/_/adminer/ for all environment variables
 config:
-  # Comma-separated list of plugins to enable
+  # Space-separated list of plugins to enable
+  # All official plugins are bundled in the Docker image
   # Available plugins: https://github.com/vrana/adminer/tree/master/plugins
+  #
+  # Recommended plugins:
+  #   tables-filter  - Search/filter tables in the sidebar (highly recommended)
+  #   json-column    - Pretty-print JSON columns as tables
+  #   enum-types     - PostgreSQL enum types support
+  #   edit-textarea  - Better text editing with larger textarea
+  #   dump-zip       - Export database as ZIP
+  #   dump-bz2       - Export database as BZ2
+  #   edit-foreign   - Nice editor for foreign key fields
+  #   file-upload    - Upload files directly to TEXT/BLOB fields
+  #   slugify        - Auto-generate slugs
+  #
+  # Example: "tables-filter json-column enum-types"
   plugins: ""
+
   # Design theme to use
   # Available designs: https://github.com/vrana/adminer/tree/master/designs
+  #
+  # Popular designs:
+  #   pepa-linha  - Clean, modern look (recommended)
+  #   hydra       - Dark theme
+  #   nette       - Bootstrap-like
+  #   price       - Minimal
+  #   rmsoft      - Professional
+  #   rmsoft-blue - Professional blue
+  #   dracula     - Dark dracula theme
+  #
   design: ""
+
   # Default server to connect to (legacy, prefer database.server)
   externalserver: ""
 
 # Database connection defaults
 database:
   # Default database server hostname
+  # This pre-fills the "Server" field in the login form
   server: ""
+
   # Default database driver
   # Options: server (MySQL), pgsql (PostgreSQL), sqlite, sqlite2, oracle, mssql, mongo, elastic
   driver: ""
 
 # Additional environment variables
 extraEnv: []
+  # - name: ADMINER_DEFAULT_DB_NAME
+  #   value: "mydb"
 
 # Environment variables from secrets or configmaps
 extraEnvFrom: []
+  # - secretRef:
+  #     name: adminer-secrets
+  # - configMapRef:
+  #     name: adminer-config
 
 nameOverride: ""
 fullnameOverride: ""
@@ -85,6 +119,8 @@ resources:
 
 # Node selector
 nodeSelector: {}
+  # kubernetes.io/arch: amd64
+  # karpenter.sh/capacity-type: on-demand
 
 # Tolerations
 tolerations: []
