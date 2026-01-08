@@ -21,7 +21,6 @@ config:
   # Recommended plugins:
   #   tables-filter  - Search/filter tables in the sidebar (highly recommended)
   #   json-column    - Pretty-print JSON columns as tables
-  #   enum-types     - PostgreSQL enum types support
   #   edit-textarea  - Better text editing with larger textarea
   #   dump-zip       - Export database as ZIP
   #   dump-bz2       - Export database as BZ2
